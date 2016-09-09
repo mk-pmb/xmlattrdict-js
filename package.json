@@ -1,0 +1,32 @@
+{ "name": "xmlattrdict",
+  "version": "0.0.1",
+  "description": "Parse XML tag attributes into a dictionary object, or build a tag from an object.",
+  "keywords": [
+    "attribute",
+    "attributes",
+    "dict",
+    "tag",
+    "xml"
+  ],
+
+  "author": "M.K. (https://github.com/mk-pmb)",
+  "homepage": "https://github.com/mk-pmb/xmlattrdict-js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk-pmb/xmlattrdict-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mk-pmb/xmlattrdict-js/issues"
+  },
+
+  "private": false, "license": "ISC",
+
+  "main": "xmlattrdict.js",
+  "scripts": { "test": "node test.js" },
+  "dependencies": {
+    "rxu": "^0.0.4",
+    "xmlunidefuse": "^0.1.3"
+  },
+
+  "npm vs. BOM = Unexpected token": "-*- coding: UTF-8 -*-"
+}
