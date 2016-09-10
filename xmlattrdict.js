@@ -17,7 +17,8 @@ EX = function xmlattrdict(input, opts) {
 };
 
 
-function dpop(dict, key, dflt) {
+EX.popAttr = function popAttr(dict, key, dflt) {
+  if (arguments.length === 1) { return popAttr.bind(null, dict); }
   var val = dict[key];
   if (val === undefined) { val = dflt; }
   delete dict[key];
@@ -109,14 +110,14 @@ EX.tag2dict = function (tag, opts) {
 
 
 EX.dict2tag = function (dict, opts) {
-  dict = Object.assign({}, dict);   // make a copy so we can safely dpop()
+  dict = Object.assign({}, dict);   // make a copy so we can safely popAttr()
   if (arguments.length > 2) {
     Object.assign.apply(dict, Array.prototype.slice.call(arguments, 2));
   }
-  var tagName = dpop(dict, '', ''), badKeys = [],
+  var dpop = EX.popAttr(dict), tagName = dpop('', ''), badKeys = [],
     attrs = lsep(tagName, '<'),
-    tail = lsep(dpop(dict, ' ', ''), ' ') + dpop(dict, '>', '');
-  if (dpop(dict, '/')) { tail += ' /'; }
+    tail = lsep(dpop(' ', ''), ' ') + dpop('>', '');
+  if (dpop('/')) { tail += ' /'; }
 
   opts = (opts || false);
   badKeys.strategy = (function (bkOpt) {
