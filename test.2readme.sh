@@ -7,7 +7,21 @@ function update_readme () {
   cd "$SELFPATH" || return $?
   local RMD=README.md
   local UPD="$RMD.upd-$$.tmp"
-  grep -Fe 'var ' -m 1 -A 9002 -- test.js | sed -nre '
+  sed -nre '
+    : skip
+      /^var /b copy
+      n
+    b skip
+    : copy
+      /^function test\(/b testfunc_head
+      p;n
+    b copy
+    : testfunc_head
+      /\n\s+try/!{N;b testfunc_head}
+      s~\n.*(\n\s+try)~ // […]\1~
+      p;n
+    b copy
+    ' -- test.js | sed -nre '
     : copy
       p
       /```javascript/{

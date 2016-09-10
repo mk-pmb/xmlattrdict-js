@@ -6,32 +6,28 @@ Parse XML tag attributes into a dictionary object, or build a tag from an object
 
 Usage
 -----
-see [doc/demo/usage.js](doc/demo/usage.js)
-:TODO:
-
-```bash
-$ xmlattrdict foo
-bar
-```
-
 ```javascript
-var xad = require('xmlattrdict'), tag,
-  eq = require('assert').deepStrictEqual;
+var xmlAttrDict = require('xmlattrdict'), assert = require('assert'), input;
 
-function o0(a, b, c) { return Object.assign(Object.create(null), a, b, c); }
-function err(x, o) { try { return xad(x, o); } catch (e) { return String(e); } }
+function test(v, opts, expect) { // […]
+  try { v = xmlAttrDict(v, opts); } catch (err) { v = String(err); }
+  assert.deepStrictEqual(v, expect);
+}
 
-eq(xad('<?xml version="1.0"?>'),
-  o0({ '': '?xml', version: '1.0' }));
+test('<?xml version="1.0"?>',   { '': '?xml', version: '1.0' });
+test('<!-- comment -->',        { '': '!--', comment: true, ' ': '--' });
 
-eq(err('<!-- comment -->'),
-  'Error: unexpected remaining tag content: --');
+test('<ubuntu version="14.04" lts codename="trusty" />',
+  { '': 'ubuntu', version: '14.04', lts: true, codename: 'trusty', '>': '/' });
 
-eq(xad('<!-- comment -->', { remainderAttr: '<…>' }),
-  o0({ '': '!--', comment: true, '<…>': '--' }));
-
-eq(xad('<pizza onions peppers="hot" crust="thin">'),
-  o0({ '': 'pizza', onions: true, peppers: 'hot', crust: 'thin' }));
+input = '<phones line=23 line=42 line=hold>';
+test(input,                   { '': 'phones', line: [ '23', '42', 'hold' ] });
+test(input, { multi: true },  { '': 'phones', line: [ '23', '42', 'hold' ] });
+test(input, { multi: false }, { '': 'phones', line: '23' });
+test(input, { multi: '\n' },  { '': 'phones', line: '23\n42\nhold' });
+test(input, { multi: 2 },     'Error: Unsupported merge strategy: 2');
+test(input, { multi: function prepend(a, b) { return b + a; }
+  }, { '': 'phones', line: 'hold4223' });
 ```
 
 

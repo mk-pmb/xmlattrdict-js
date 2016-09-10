@@ -3,7 +3,8 @@
 'use strict';
 
 var EX, rxu = require('rxu'), xmlEsc = require('xmlunidefuse'),
-  xmldecode = require('xmldecode');
+  xmldecode = require('xmldecode'),
+  hasOwn = Function.call.bind(Object.prototype.hasOwnProperty);
 
 EX = function xmlattrdict(input, opts) {
   switch (input && typeof input) {
@@ -20,7 +21,7 @@ EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
 EX.eqSignValue = rxu.join(['(=(?:',
   /"([\x00-!#-\uFFFF]*)"|/,
   /'([\x00-&\x28-\uFFFF]*)'|/,
-  /([!#-&\x28;=@-\uFFFF]*)/,
+  /([\!\#-\&\x28-;=@-\uFFFF]*)/,
   ')|)']);
 EX.nextAttrRgx = rxu.join([/^[\x00- ]*/, EX.attrNameRgx, EX.eqSignValue]);
 
@@ -29,24 +30,32 @@ EX.tag2dict = function (tag, opts) {
   var attrs, addAttr;
   tag = String(tag);
   opts = (opts || false);
-  attrs = (opts.destObj || Object.create(null));
+  attrs = opts.destObj;
+  attrs = (attrs || (attrs === null ? Object.create(null) : {}));
 
   addAttr = function (rawName, rawValue) {
     var textValue = rawValue;
     if ((typeof rawValue) === 'string') { textValue = xmldecode(rawValue); }
-    attrs[rawName] = textValue;
-    if (!addAttr.wantRaw) { return; }
     if (addAttr.wantRaw === true) {
-      attrs[rawName] = rawValue;
-      return;
+      return addAttr.addOrMulti(attrs, rawName, rawValue);
     }
-    addAttr.wantRaw[rawName] = rawValue;
+    addAttr.addOrMulti(attrs, rawName, textValue);
+    if (!addAttr.wantRaw) { return; }
+    addAttr.addOrMulti(addAttr.wantRaw, rawName, rawValue);
   };
   addAttr.wantRaw = (opts.attribRawValues || false);
+  addAttr.addOrMulti = function (dict, key, newVal) {
+    if (hasOwn(dict, key)) { newVal = addAttr.multi(dict[key], newVal); }
+    dict[key] = newVal;
+  };
+  addAttr.multi = EX.makeValueMerger(opts.multi);
 
   rxu.ifMatch(tag, /(?:(\/)|\?|)>?[\s\n]*$/, function trailingSlash(sl) {
     tag = tag.substr(0, sl.index);
-    if (sl[1]) { attrs[sl[1]] = true; }
+    if (sl[1]) {
+      addAttr.end = sl[1];
+      // defer in order to get prettier console.dir
+    }
   });
 
   rxu.ifMatch(tag, /^<(\S+)\s*/, function tagName(tn) {
@@ -59,16 +68,14 @@ EX.tag2dict = function (tag, opts) {
     tag = tag.slice(m[0].length).replace(/^\s+/, '');
   };
   addAttr.remainder = function () {
-    if (!opts.remainderAttr) {
-      throw new Error('unexpected remaining tag content: ' + tag);
-    }
-    attrs[opts.remainderAttr] = tag;
+    attrs[' '] = tag;
     tag = '';
   };
 
   while (tag) {
     rxu.ifMatch(tag, EX.nextAttrRgx, addAttr.found, addAttr.remainder);
   }
+  if (addAttr.end) { attrs['>'] = addAttr.end; }
   return attrs;
 };
 
@@ -93,6 +100,25 @@ EX.dict2tag = function (dict) {
 
   return tag;
 };
+
+
+EX.makeValueMerger = function (strategy) {
+  switch (strategy && typeof strategy) {
+  case 0:
+  case false:
+    return function (old) { return old; };
+  case 'string':
+    return function (o, n) { return (o + strategy + n); };
+  case 'function':
+    return strategy;
+  case undefined:
+  case null:
+  case 'boolean':
+    return function (o, n) { return [].concat(o, n); };
+  }
+  throw new Error('Unsupported merge strategy: ' + String(strategy));
+};
+
 
 
 
