@@ -87,7 +87,6 @@ EX.tag2dict = function (tag, opts) {
   while (tag) {
     rxu.ifMatch(tag, EX.nextAttrRgx, addAttr.found, addAttr.remainder);
   }
-  console.log(addAttr.tail);
   switch (addAttr.tail || '') {
   case '':
     break;
