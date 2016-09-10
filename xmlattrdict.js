@@ -87,7 +87,16 @@ EX.tag2dict = function (tag, opts) {
   while (tag) {
     rxu.ifMatch(tag, EX.nextAttrRgx, addAttr.found, addAttr.remainder);
   }
-  if (addAttr.tail) { attrs['>'] = addAttr.tail; }
+  console.log(addAttr.tail);
+  switch (addAttr.tail || '') {
+  case '':
+    break;
+  case '/':
+    attrs[addAttr.tail] = true;
+    break;
+  default:
+    attrs['>'] = addAttr.tail;
+  }
   return attrs;
 };
 

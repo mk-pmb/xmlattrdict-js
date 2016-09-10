@@ -21,13 +21,13 @@ function expect(x) { assert.deepStrictEqual(result, x); }
 //##########\\ tag -> dict //#############################################\\
 
 result = xmlAttrDict('<?xml version="1.0"?>');
-expect({ '': '?xml', version: '1.0' });
+expect({ '': '?xml', version: '1.0' });     // final "?" is ignored
 
 result = xmlAttrDict("<!-- I'm a comm&amp; -->");
 expect({ '': '!--', I: true, ' ': "'m a comm& --" });
 
 result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
-expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '>': '/' });
+expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '/': true });
 
 //===== repeating attribute names =====
 
