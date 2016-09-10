@@ -50,6 +50,22 @@ function prepend(a, b) { return b + a; }
 result = xmlAttrDict(input, { multi: prepend });
 expect({ '': 'phones', line: 'hold4223' });
 
+//===== capture attribute order =====
+input = '<toast bread cheese="cheddar" ham salad tomato cheese="gouda" ' +
+  'tomato salad bread>';
+result = xmlAttrDict(input, { attrOrder: '#' });
+expect({ '': 'toast',
+  '#': ['bread', 'cheese', 'ham', 'salad', 'tomato', 'cheese', 'tomato',
+    'salad', 'bread'],
+  bread: [true, true], cheese: ['cheddar', 'gouda'], ham: true,
+  salad: [true, true], tomato: [true, true] });
+
+result = ['add them here'];
+xmlAttrDict(input, { attrOrder: result });
+expect(['add them here', 'bread', 'cheese', 'ham', 'salad', 'tomato',
+  'cheese', 'tomato', 'salad', 'bread']);
+
+
 //##########\\ dict -> tag //#############################################\\
 
 result = xmlAttrDict({ '': '!DOCTYPE', ' ': 'html' });

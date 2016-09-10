@@ -39,7 +39,7 @@ EX.nextAttrRgx = rxu.join([/^[\x00- ]*/, EX.attrNameRgx, EX.eqSignValue]);
 
 
 EX.tag2dict = function (tag, opts) {
-  var attrs, addAttr;
+  var attrs, addAttr, attrOrder;
   tag = String(tag);
   opts = (opts || false);
   attrs = opts.destObj;
@@ -47,6 +47,7 @@ EX.tag2dict = function (tag, opts) {
 
   addAttr = function (rawName, rawValue) {
     var textValue = rawValue;
+    if (attrOrder) { attrOrder.push(rawName); }
     if ((typeof rawValue) === 'string') { textValue = xmldecode(rawValue); }
     if (addAttr.wantRaw === true) {
       return addAttr.addOrMulti(attrs, rawName, rawValue);
@@ -74,6 +75,13 @@ EX.tag2dict = function (tag, opts) {
     tag = tag.substr(tn[0].length);
     attrs[''] = tn[1];
   });
+
+  attrOrder = opts.attrOrder;
+  if (attrOrder) {
+    if (!Array.isArray(attrOrder)) {
+      attrOrder = attrs[attrOrder] = [];
+    }
+  }
 
   addAttr.found = function (m) {
     addAttr(m[1], (m[2] ? (m[3] || m[4] || m[5]) : true));
