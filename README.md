@@ -6,28 +6,112 @@ Parse XML tag attributes into a dictionary object, or build a tag from an object
 
 Usage
 -----
+from [test.js](test.js):
 ```javascript
-var xmlAttrDict = require('xmlattrdict'), assert = require('assert'), input;
+var xmlAttrDict = require('xmlattrdict'), input, result,
+  assert = require('assert');
 
-function test(v, opts, expect) { // […]
-  try { v = xmlAttrDict(v, opts); } catch (err) { v = String(err); }
-  assert.deepStrictEqual(v, expect);
-}
+xmlAttrDict = throw2string(xmlAttrDict);
+function expect(x) { assert.deepStrictEqual(result, x); }
 
-test('<?xml version="1.0"?>',   { '': '?xml', version: '1.0' });
-test('<!-- comment -->',        { '': '!--', comment: true, ' ': '--' });
+//##########\\ tag -> dict //#############################################\\
 
-test('<ubuntu version="14.04" lts codename="trusty" />',
-  { '': 'ubuntu', version: '14.04', lts: true, codename: 'trusty', '>': '/' });
+result = xmlAttrDict('<?xml version="1.0"?>');
+expect({ '': '?xml', version: '1.0' });
+
+result = xmlAttrDict("<!-- I'm a comm&amp; -->");
+expect({ '': '!--', I: true, ' ': "'m a comm& --" });
+
+result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
+expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '>': '/' });
+
+//===== repeating attribute names =====
 
 input = '<phones line=23 line=42 line=hold>';
-test(input,                   { '': 'phones', line: [ '23', '42', 'hold' ] });
-test(input, { multi: true },  { '': 'phones', line: [ '23', '42', 'hold' ] });
-test(input, { multi: false }, { '': 'phones', line: '23' });
-test(input, { multi: '\n' },  { '': 'phones', line: '23\n42\nhold' });
-test(input, { multi: 2 },     'Error: Unsupported merge strategy: 2');
-test(input, { multi: function prepend(a, b) { return b + a; }
-  }, { '': 'phones', line: 'hold4223' });
+result = xmlAttrDict(input);
+expect({ '': 'phones', line: [ '23', '42', 'hold' ] });
+
+result = xmlAttrDict(input, { multi: true });
+expect({ '': 'phones', line: [ '23', '42', 'hold' ] });
+
+result = xmlAttrDict(input, { multi: false });
+expect({ '': 'phones', line: '23' });
+
+result = xmlAttrDict(input, { multi: '\n' });
+expect({ '': 'phones', line: '23\n42\nhold' });
+
+result = xmlAttrDict(input, { multi: 2 });
+expect('Error: Unsupported merge strategy: 2');
+
+function prepend(a, b) { return b + a; }
+result = xmlAttrDict(input, { multi: prepend });
+expect({ '': 'phones', line: 'hold4223' });
+
+//##########\\ dict -> tag //#############################################\\
+
+result = xmlAttrDict({ '': '!DOCTYPE', ' ': 'html' });
+expect('<!DOCTYPE html>');
+
+result = xmlAttrDict({ '': '!DOCTYPE', html: true });
+expect('<!DOCTYPE html>');
+
+result = xmlAttrDict({ '': '!DOCTYPE', html: null });
+expect('<!DOCTYPE html>');
+
+result = xmlAttrDict({ '': '!--', thisIs: true, a: null, comment: true,
+  '>': ' --' });
+expect('<!-- a comment thisIs -->');
+
+result = xmlAttrDict({ '': '!--', ' ': 'thisIs a comment', '>': ' --' });
+expect('<!-- thisIs a comment -->');
+
+result = xmlAttrDict({ '': '!--', ' ': 'thisIs a comment --' });
+expect('<!-- thisIs a comment -->');
+
+result = xmlAttrDict({ '': 'meta', 'http-equiv': 'Content-Type',
+  content: 'text/html' });
+expect('<meta content="text/html" http-equiv="Content-Type">');
+
+result = xmlAttrDict({ '': 'msg', text: '&Hel​lo s\n<o>wman! ☃' });
+expect('<msg text="&amp;Hel&#x200B;lo&#xA0;s&#10;&lt;o&gt;wman!&#x205F;☃">');
+
+//===== additional verbatim text and tail =====
+
+result = xmlAttrDict({ '': 'hr', size: 1 });
+expect('<hr size="1">');
+
+result = xmlAttrDict({ '': 'hr', size: 1, '>': '/' });
+expect('<hr size="1"/>');
+
+result = xmlAttrDict({ '': 'hr', size: 1, ' ': '/' });
+expect('<hr size="1" />');  // <-- space --^
+
+result = xmlAttrDict({ '': 'hr', size: 1, '/': true });
+expect('<hr size="1" />');
+
+result = xmlAttrDict({ '': 'hr', size: 1, ' ': 'verba<?php foo(); ?>tim' });
+expect('<hr size="1" verba<?php foo(); ?>tim>');
+
+result = xmlAttrDict({ '': 'hr', size: 1, '>': '&tail;' });
+expect('<hr size="1"&tail;>');
+
+result = xmlAttrDict({ '': 'hr', size: 1, '>': '&tail', ' ': 'ver<b>atim' });
+expect('<hr size="1" ver<b>atim&tail>');
+
+//===== invalid attribute names =====
+
+input = { '': '\r', '\n': 'nl', '\t': 'tab', '=': 'eq', '?': 'qm', ' ': 'sp' };
+result = xmlAttrDict(input);
+expect('Error: bad keys: "&#9;", "&#10;", "=", "?"');
+
+result = xmlAttrDict(input, { badKeys: 'error' });
+expect('Error: bad keys: "&#9;", "&#10;", "=", "?"');
+
+result = xmlAttrDict(input, { badKeys: 'accept' });
+expect('<\r \t="tab" \n="nl" =="eq" ?="qm" sp>');
+
+result = xmlAttrDict(input, { badKeys: 'comment' });
+expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
 ```
 
 

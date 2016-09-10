@@ -17,6 +17,18 @@ EX = function xmlattrdict(input, opts) {
 };
 
 
+function dpop(dict, key, dflt) {
+  var val = dict[key];
+  if (val === undefined) { val = dflt; }
+  delete dict[key];
+  return val;
+}
+
+
+function lsep(v, s) { return (v ? s + v : v); }
+function ltrim(s) { return String(s).replace(/^[\n\s]+/, ''); }
+
+
 EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
 EX.eqSignValue = rxu.join(['(=(?:',
   /"([\x00-!#-\uFFFF]*)"|/,
@@ -53,7 +65,7 @@ EX.tag2dict = function (tag, opts) {
   rxu.ifMatch(tag, /(?:(\/)|\?|)>?[\s\n]*$/, function trailingSlash(sl) {
     tag = tag.substr(0, sl.index);
     if (sl[1]) {
-      addAttr.end = sl[1];
+      addAttr.tail = sl[1];
       // defer in order to get prettier console.dir
     }
   });
@@ -68,37 +80,79 @@ EX.tag2dict = function (tag, opts) {
     tag = tag.slice(m[0].length).replace(/^\s+/, '');
   };
   addAttr.remainder = function () {
-    attrs[' '] = tag;
+    addAttr(' ', tag);
     tag = '';
   };
 
   while (tag) {
     rxu.ifMatch(tag, EX.nextAttrRgx, addAttr.found, addAttr.remainder);
   }
-  if (addAttr.end) { attrs['>'] = addAttr.end; }
+  if (addAttr.tail) { attrs['>'] = addAttr.tail; }
   return attrs;
 };
 
 
-EX.dict2tag = function (dict) {
-  if (arguments.length > 1) { dict = Object.assign.apply({}, arguments); }
-  var tag = (dict[''] ? '<' + dict[''] : ''), badKeys = [];
+EX.dict2tag = function (dict, opts) {
+  dict = Object.assign({}, dict);   // make a copy so we can safely dpop()
+  if (arguments.length > 2) {
+    Object.assign.apply(dict, Array.prototype.slice.call(arguments, 2));
+  }
+  var tagName = dpop(dict, '', ''), badKeys = [],
+    attrs = lsep(tagName, '<'),
+    tail = lsep(dpop(dict, ' ', ''), ' ') + dpop(dict, '>', '');
+  if (dpop(dict, '/')) { tail += ' /'; }
+
+  opts = (opts || false);
+  badKeys.strategy = (function (bkOpt) {
+    switch (bkOpt) {
+    case 'accept':
+      badKeys.push = false;
+      return;
+    case undefined:
+    case 'error':
+      return EX.quotedList.bind(null, badKeys, { throwReason: 'bad keys' });
+    case 'comment':
+      return function () {
+        attrs += '<!-- bad keys: ' + EX.quotedList(badKeys) + ' -->';
+      };
+    }
+    if (bkOpt) {
+      if (Array.isArray(bkOpt)) {
+        badKeys.push = badKeys.strategy.push.bind(badKeys.strategy);
+        badKeys.strategy = undefined;
+        return;
+      }
+    }
+    throw new Error('unsupported badKeys strategy: ' + String(bkOpt));
+  }(opts.badKeys));
 
   Object.keys(dict).sort().forEach(function (key, val) {
-    if (key === '') { return; }
-    if (rxu.m(key, EX.attrNameRgx)[0] !== key) { return badKeys.push(key); }
-    tag = (tag && ' ');
+    if (badKeys.push && (rxu(EX.attrNameRgx, key)[0] !== key)) {
+      return badKeys.push(key);
+    }
+    attrs += (attrs && ' ') + key;
     val = dict[key];
     if (val === undefined) { return; }
     if (val === null) { return; }
-    tag += '="' + xmlEsc(val) + '"';
+    if (val === true) { return; }
+    attrs += '="' + xmlEsc(val) + '"';
   });
-
-  if (badKeys.length) {
-    tag += '><!-- bad keys: "' + badKeys.map(xmlEsc).join('", "');
+  attrs += tail;
+  if (tagName) { attrs += '>'; }
+  if (badKeys.length && badKeys.strategy) {
+    badKeys = badKeys.strategy(badKeys, attrs);
+    if ((typeof badKeys) === 'string') { return badKeys; }
   }
+  return attrs;
+};
 
-  return tag;
+
+EX.quotedList = function (arr, opts) {
+  opts = (opts || false);
+  arr = (opts.prefix || '') + '"' + arr.map(xmlEsc).join('", "') + '"' +
+    (opts.suffix || '');
+  if (opts.throwReason) { throw new Error(opts.throwReason + ': ' + arr); }
+  return arr;
 };
 
 

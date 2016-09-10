@@ -13,6 +13,7 @@ function update_readme () {
       n
     b skip
     : copy
+      \|^/\*+ ENDOF readme \*+/|q
       /^function test\(/b testfunc_head
       p;n
     b copy
