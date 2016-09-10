@@ -15,7 +15,6 @@ function throw2string(func) {
 var xmlAttrDict = require('xmlattrdict'), input, result,
   assert = require('assert');
 
-xmlAttrDict = throw2string(xmlAttrDict);
 function expect(x) { assert.deepStrictEqual(result, x); }
 
 //##########\\ tag -> dict //#############################################\\
@@ -44,7 +43,7 @@ expect({ '': 'phones', line: '23' });
 result = xmlAttrDict(input, { multi: '\n' });
 expect({ '': 'phones', line: '23\n42\nhold' });
 
-result = xmlAttrDict(input, { multi: 2 });
+result = throw2string(xmlAttrDict)(input, { multi: 2 });
 expect('Error: Unsupported merge strategy: 2');
 
 function prepend(a, b) { return b + a; }
@@ -105,10 +104,10 @@ expect('<hr size="1" ver<b>atim&tail>');
 //===== invalid attribute names =====
 
 input = { '': '\r', '\n': 'nl', '\t': 'tab', '=': 'eq', '?': 'qm', ' ': 'sp' };
-result = xmlAttrDict(input);
+result = throw2string(xmlAttrDict)(input);
 expect('Error: bad keys: "&#9;", "&#10;", "=", "?"');
 
-result = xmlAttrDict(input, { badKeys: 'error' });
+result = throw2string(xmlAttrDict)(input, { badKeys: 'error' });
 expect('Error: bad keys: "&#9;", "&#10;", "=", "?"');
 
 result = xmlAttrDict(input, { badKeys: 'accept' });
