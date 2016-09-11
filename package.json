@@ -1,5 +1,5 @@
 { "name": "xmlattrdict",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Parse XML tag attributes into a dictionary object, or build a tag from an object.",
   "keywords": [
     "attribute",

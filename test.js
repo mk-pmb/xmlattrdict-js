@@ -27,8 +27,8 @@ expect({ '': '!--', I: true, ' ': "'m a comm& --" });
 result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
 expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '/': true });
 
-result = xmlAttrDict('</closing tag>');
-expect({ '': '/closing', tag: true });
+result = xmlAttrDict('</closing tag empty-attr="" >');
+expect({ '': '/closing', tag: true, 'empty-attr': '' });
 
 //===== repeating attribute names =====
 

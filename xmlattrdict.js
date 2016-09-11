@@ -95,7 +95,7 @@ EX.tag2dict = function (tag, opts) {
   }
 
   addAttr.found = function (m) {
-    addAttr(m[1], (m[2] ? (m[3] || m[4] || m[5]) : true));
+    addAttr(m[1], (m[2] ? (m[3] || m[4] || m[5] || '') : true));
     tag = tag.slice(m[0].length).replace(/^\s+/, '');
   };
   addAttr.remainder = function () {
