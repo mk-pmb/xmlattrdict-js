@@ -23,7 +23,7 @@ EX.popAttr = function popAttr(dict, key, dflt) {
   if (val === undefined) { val = dflt; }
   delete dict[key];
   return val;
-}
+};
 
 
 function lsep(v, s) { return (v ? s + v : v); }

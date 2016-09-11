@@ -14,7 +14,6 @@ function throw2string(func) {
 
 var xmlAttrDict = require('xmlattrdict'), input, result,
   assert = require('assert');
-
 function expect(x) { assert.deepStrictEqual(result, x); }
 
 //##########\\ tag -> dict //#############################################\\
@@ -27,6 +26,9 @@ expect({ '': '!--', I: true, ' ': "'m a comm& --" });
 
 result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
 expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '/': true });
+
+result = xmlAttrDict('</closing tag>');
+expect({ '': '/closing', tag: true });
 
 //===== repeating attribute names =====
 
@@ -51,6 +53,7 @@ result = xmlAttrDict(input, { multi: prepend });
 expect({ '': 'phones', line: 'hold4223' });
 
 //===== capture attribute order =====
+
 input = '<toast bread cheese="cheddar" ham salad tomato cheese="gouda" ' +
   'tomato salad bread>';
 result = xmlAttrDict(input, { attrOrder: '#' });
@@ -65,6 +68,13 @@ xmlAttrDict(input, { attrOrder: result });
 expect(['add them here', 'bread', 'cheese', 'ham', 'salad', 'tomato',
   'cheese', 'tomato', 'salad', 'bread']);
 
+//===== extra non-attribute text =====
+
+result = xmlAttrDict('</closing withSlash/>');
+expect({ '': '/closing', withSlash: true, '/': true });
+
+result = xmlAttrDict('</closing withSpaceSlash />');
+expect({ '': '/closing', withSpaceSlash: true, '/': true });
 
 //##########\\ dict -> tag //#############################################\\
 
