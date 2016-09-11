@@ -19,7 +19,17 @@ EX = function xmlattrdict(input, opts) {
 
 EX.popAttr = function popAttr(dict, key, dflt) {
   if (arguments.length === 1) { return popAttr.bind(null, dict); }
-  var val = dict[key];
+  var val;
+  if ((key && typeof key) === 'object') {
+    if (Array.isArray(key)) {
+      val = {};
+      key.map(function (k) { val[k] = popAttr(dict, k, dflt); });
+      return val;
+    }
+    Object.keys(key).map(function (k) { key[k] = popAttr(dict, k, dflt); });
+    return key;
+  }
+  val = dict[key];
   if (val === undefined) { val = dflt; }
   delete dict[key];
   return val;
@@ -143,16 +153,11 @@ EX.dict2tag = function (dict, opts) {
     throw new Error('unsupported badKeys strategy: ' + String(bkOpt));
   }(opts.badKeys));
 
-  Object.keys(dict).sort().forEach(function (key, val) {
+  Object.keys(dict).sort().forEach(function (key) {
     if (badKeys.push && (rxu(EX.attrNameRgx, key)[0] !== key)) {
       return badKeys.push(key);
     }
-    attrs += (attrs && ' ') + key;
-    val = dict[key];
-    if (val === undefined) { return; }
-    if (val === null) { return; }
-    if (val === true) { return; }
-    attrs += '="' + xmlEsc(val) + '"';
+    attrs += (attrs && ' ') + EX.fmtAttrXml_dk(dict, key);
   });
   attrs += tail;
   if (tagName) { attrs += '>'; }
@@ -161,6 +166,15 @@ EX.dict2tag = function (dict, opts) {
     if ((typeof badKeys) === 'string') { return badKeys; }
   }
   return attrs;
+};
+
+
+EX.fmtAttrXml_dk = function fmtAttrXml(dict, key, prefix, suffix) {
+  var val = dict[key];
+  if (val === undefined) { return ''; }
+  if (val === null) { return key; }
+  if (val === true) { return key; }
+  return ((prefix || '') + key + '="' + xmlEsc(val) + '"' + (suffix || ''));
 };
 
 
@@ -189,6 +203,51 @@ EX.makeValueMerger = function (strategy) {
   }
   throw new Error('Unsupported merge strategy: ' + String(strategy));
 };
+
+
+EX.XmlTag = (function (CF, PT) {
+  CF = function XmlTag(srcText) {
+    if ((srcText && typeof srcText) !== 'string') {
+      throw new Error('expected srcText to be a non-empty string');
+    }
+    if (srcText[0] !== '<') { srcText = '<' + srcText + '>'; }
+    var opts = { attribRawValues: {} }, attrs = EX.tag2dict(srcText, opts);
+    this.tagName = EX.popAttr(attrs, '', '');
+    this.attrs = attrs;
+    this.rawAttrs = opts.attribRawValues;
+  };
+  PT = CF.prototype;
+
+  PT.toString = function () {
+    var attr = EX.fmtAttrXml_dk.bind(null, this.attrs);
+    return '[xmlattrdict.XmlTag <'.concat(this.tagName, '>',
+      attr('id', ' '),
+      attr('name', ' '),
+      attr('class', ' '),
+      attr('type', ' '),
+      attr('role', ' '),
+      ']');
+  };
+
+  PT.popAttr = function popAttr(key, dflt) {
+    return EX.popAttr(this.attrs, key, dflt);
+  };
+  PT.popReqAttr = function (attr, emptyOk) {
+    var val = this.popAttr(attr);
+    switch (emptyOk) {
+    case '':
+      if (val === '') { return val; }
+      break;
+    case true:
+      if (val === true) { return val; }
+      if (val === '') { return val; }
+      break;
+    }
+    if ((val && typeof val) === 'string') { return val; }
+    throw new Error(String(this) + ': missing attribute: ' + attr);
+  };
+  return CF;
+}());
 
 
 
