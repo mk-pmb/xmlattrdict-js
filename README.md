@@ -1,12 +1,21 @@
 ﻿
+<!--#echo json="package.json" key="name" underline="=" -->
 xmlattrdict
 ===========
-Parse XML tag attributes into a dictionary object, or build a tag from an object.
+<!--/#echo -->
+
+<!--#echo json="package.json" key="description" -->
+Parse XML tag attributes into a dictionary object, or build a tag from an
+object.
+<!--/#echo -->
 
 
 Usage
 -----
 from [test.js](test.js):
+<!--#include file="test.js" start="/*** BEGIN readme ***/"
+  stop="/*** ENDOF readme ***/" code="javascript" -->
+<!--#verbatim lncnt="131" -->
 ```javascript
 var xmlAttrDict = require('xmlattrdict'), input, result,
   assert = require('assert');
@@ -138,8 +147,11 @@ expect('<\r \t="tab" \n="nl" =="eq" ?="qm" sp>');
 result = xmlAttrDict(input, { badKeys: 'comment' });
 expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
 ```
+<!--#toc stop="scan" -->
 
 
 License
 -------
+<!--#echo json="package.json" key=".license" -->
 ISC
+<!--/#echo -->

@@ -12,6 +12,8 @@ function throw2string(func) {
   };
 }
 
+
+/*** BEGIN readme ***/
 var xmlAttrDict = require('xmlattrdict'), input, result,
   assert = require('assert');
 function expect(x) { assert.deepStrictEqual(result, x); }
@@ -141,7 +143,8 @@ expect('<\r \t="tab" \n="nl" =="eq" ?="qm" sp>');
 
 result = xmlAttrDict(input, { badKeys: 'comment' });
 expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
-/**** ENDOF readme ****/
+/*** ENDOF readme ***/
+
 
 
 

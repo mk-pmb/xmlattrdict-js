@@ -6,6 +6,7 @@ var EX, rxu = require('rxu'), xmlEsc = require('xmlunidefuse'),
   xmldecode = require('xmldecode'),
   hasOwn = Function.call.bind(Object.prototype.hasOwnProperty);
 
+
 EX = function xmlattrdict(input, opts) {
   switch (input && typeof input) {
   case 'string':
@@ -204,50 +205,6 @@ EX.makeValueMerger = function (strategy) {
   throw new Error('Unsupported merge strategy: ' + String(strategy));
 };
 
-
-EX.XmlTag = (function (CF, PT) {
-  CF = function XmlTag(srcText) {
-    if ((srcText && typeof srcText) !== 'string') {
-      throw new Error('expected srcText to be a non-empty string');
-    }
-    if (srcText[0] !== '<') { srcText = '<' + srcText + '>'; }
-    var opts = { attribRawValues: {} }, attrs = EX.tag2dict(srcText, opts);
-    this.tagName = EX.popAttr(attrs, '', '');
-    this.attrs = attrs;
-    this.rawAttrs = opts.attribRawValues;
-  };
-  PT = CF.prototype;
-
-  PT.toString = function () {
-    var attr = EX.fmtAttrXml_dk.bind(null, this.attrs);
-    return '[xmlattrdict.XmlTag <'.concat(this.tagName, '>',
-      attr('id', ' '),
-      attr('name', ' '),
-      attr('class', ' '),
-      attr('type', ' '),
-      attr('role', ' '),
-      ']');
-  };
-
-  PT.popAttr = function popAttr(key, dflt) {
-    return EX.popAttr(this.attrs, key, dflt);
-  };
-  PT.popReqAttr = function (attr, emptyOk) {
-    var val = this.popAttr(attr);
-    switch (emptyOk) {
-    case '':
-      if (val === '') { return val; }
-      break;
-    case true:
-      if (val === true) { return val; }
-      if (val === '') { return val; }
-      break;
-    }
-    if ((val && typeof val) === 'string') { return val; }
-    throw new Error(String(this) + ': missing attribute: ' + attr);
-  };
-  return CF;
-}());
 
 
 

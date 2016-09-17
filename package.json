@@ -1,5 +1,5 @@
 { "name": "xmlattrdict",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Parse XML tag attributes into a dictionary object, or build a tag from an object.",
   "keywords": [
     "attribute",
@@ -24,6 +24,7 @@
   "main": "xmlattrdict.js",
   "scripts": { "test": "node test.js" },
   "dependencies": {
+    "generic-object-error": "^0.1.0",
     "rxu": "^0.1.2",
     "xmldecode": "^0.1.0",
     "xmlunidefuse": "^0.1.3"
