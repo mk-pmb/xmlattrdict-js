@@ -38,7 +38,7 @@ EX.popAttr = function popAttr(dict, key, dflt) {
 
 
 function lsep(v, s) { return (v ? s + v : v); }
-function ltrim(s) { return String(s).replace(/^[\n\s]+/, ''); }
+function ltrim(s) { return String(s).replace(/^\s+/, ''); }
 
 
 EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
@@ -75,7 +75,7 @@ EX.tag2dict = function (tag, opts) {
   };
   addAttr.multi = EX.makeValueMerger(opts.multi);
 
-  rxu.ifMatch(tag, /(?:(\/)|\?|)>?[\s\n]*$/, function trailingSlash(sl) {
+  rxu.ifMatch(tag, /(?:(\/)|\?|)>?\s*$/, function trailingSlash(sl) {
     tag = tag.substr(0, sl.index);
     if (sl[1]) {
       addAttr.tail = sl[1];
