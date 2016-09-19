@@ -2,10 +2,8 @@
 /* -*- tab-width: 2 -*- */
 'use strict';
 
-var EX, rxu = require('rxu'), xmlEsc = require('xmlunidefuse'),
-  xmldecode = require('xmldecode'),
+var EX, rxu = require('rxu'),
   hasOwn = Function.call.bind(Object.prototype.hasOwnProperty);
-
 
 EX = function xmlattrdict(input, opts) {
   switch (input && typeof input) {
@@ -16,6 +14,9 @@ EX = function xmlattrdict(input, opts) {
   }
   throw new Error('Expected input to be a string or an object.');
 };
+
+EX.xmldec = require('xmldecode');
+EX.xmlesc = require('xmlunidefuse');
 
 
 EX.popAttr = function popAttr(dict, key, dflt) {
@@ -60,7 +61,7 @@ EX.tag2dict = function (tag, opts) {
   addAttr = function (rawName, rawValue) {
     var textValue = rawValue;
     if (attrOrder) { attrOrder.push(rawName); }
-    if ((typeof rawValue) === 'string') { textValue = xmldecode(rawValue); }
+    if ((typeof rawValue) === 'string') { textValue = EX.xmldec(rawValue); }
     if (addAttr.wantRaw === true) {
       return addAttr.addOrMulti(attrs, rawName, rawValue);
     }
@@ -175,13 +176,13 @@ EX.fmtAttrXml_dk = function fmtAttrXml(dict, key, prefix, suffix) {
   if (val === undefined) { return ''; }
   if (val === null) { return key; }
   if (val === true) { return key; }
-  return ((prefix || '') + key + '="' + xmlEsc(val) + '"' + (suffix || ''));
+  return ((prefix || '') + key + '="' + EX.xmlesc(val) + '"' + (suffix || ''));
 };
 
 
 EX.quotedList = function (arr, opts) {
   opts = (opts || false);
-  arr = (opts.prefix || '') + '"' + arr.map(xmlEsc).join('", "') + '"' +
+  arr = (opts.prefix || '') + '"' + arr.map(EX.xmlesc).join('", "') + '"' +
     (opts.suffix || '');
   if (opts.throwReason) { throw new Error(opts.throwReason + ': ' + arr); }
   return arr;

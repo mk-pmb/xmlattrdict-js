@@ -19,6 +19,16 @@ PT = CF.prototype;
 
 Object.assign(PT, objerr.proto);
 
+
+CF.peekTag = function (stringPeeksBuffer, args) {
+  // glue for package "string-peeks"
+  args = Array.prototype.slice.call(arguments, 1);
+  var tag = stringPeeksBuffer.peekTag.apply(stringPeeksBuffer, args);
+  if (tag) { tag = new CF(tag.input); }
+  return tag;
+};
+
+
 PT.toString = function () {
   var attr = xad.fmtAttrXml_dk.bind(null, this.attrs);
   return '[xmlattrdict.XmlTag <'.concat(this.tagName, '>',
