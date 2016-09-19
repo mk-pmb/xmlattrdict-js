@@ -20,11 +20,14 @@ PT = CF.prototype;
 Object.assign(PT, objerr.proto);
 
 
-CF.peekTag = function (stringPeeksBuffer, args) {
+CF.peekTag = function (spBuf, args) {
   // glue for package "string-peeks"
   args = Array.prototype.slice.call(arguments, 1);
-  var tag = stringPeeksBuffer.peekTag.apply(stringPeeksBuffer, args);
-  if (tag) { tag = new CF(tag.input); }
+  var tag = spBuf.peekTag.apply(spBuf, args);
+  if (tag) {
+    tag = new CF(tag.input);
+    if (spBuf.calcPosLnChar) { tag.srcPos = spBuf.calcPosLnChar(); }
+  }
   return tag;
 };
 
