@@ -42,6 +42,8 @@ function lsep(v, s) { return (v ? s + v : v); }
 function ltrim(s) { return String(s).replace(/^\s+/, ''); }
 
 
+EX.tagStartRgx = /<([!-;=\?-\uFFFF]+)(?:\s+|\/)/;
+EX.tagStartRgx.at0 = rxu.join(['^', EX.tagStartRgx]);
 EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
 EX.eqSignValue = rxu.join(['(=(?:',
   /"([\x00-!#-\uFFFF]*)"|/,
@@ -49,6 +51,18 @@ EX.eqSignValue = rxu.join(['(=(?:',
   /([\!\#-\&\x28-;=@-\uFFFF]*)/,
   ')|)']);
 EX.nextAttrRgx = rxu.join([/^[\x00- ]*/, EX.attrNameRgx, EX.eqSignValue]);
+
+EX.tagRgx = (function () {
+  var tag = rxu.body(rxu.join([/\s*/, EX.tagStartRgx, '(?:',
+    /[\x00-!#-&\(-=\?-Z\\-\uFFFF]+/, '|',
+    EX.eqSignValue, '|',
+    /\[(?:<$subtag>)*\s*\]/,
+    ')+>']));
+  tag = tag.replace(/<\$subtag>/g, tag);
+  tag = tag.replace(/<\$subtag>/g, '\\s*');
+  tag = Object.assign(new RegExp(tag, ''), { at0: new RegExp('^' + tag, '') });
+  return tag;
+}());
 
 
 EX.tag2dict = function (tag, opts) {
@@ -84,7 +98,7 @@ EX.tag2dict = function (tag, opts) {
     }
   });
 
-  rxu.ifMatch(tag, /^<(\S+)\s*/, function tagName(tn) {
+  rxu.ifMatch(tag, EX.tagStartRgx.at0, function tagName(tn) {
     tag = tag.substr(tn[0].length);
     attrs[''] = tn[1];
   });
@@ -101,8 +115,16 @@ EX.tag2dict = function (tag, opts) {
     tag = tag.slice(m[0].length).replace(/^\s+/, '');
   };
   addAttr.remainder = function () {
+    if ((tag[0] === '[')  && addAttr.doctypeSubTag()) { return; }
     addAttr(' ', tag);
     tag = '';
+  };
+  addAttr.doctypeSubTag = function () {
+    var subTags = EX.eatDoctypeSubTags(tag.slice(1));
+    if (!subTags) { return false; }
+    tag = subTags.remainder;
+    attrs['[]'] = (attrs['[]'] || []).concat(subTags);
+    return true;
   };
 
   while (tag) {
@@ -118,6 +140,25 @@ EX.tag2dict = function (tag, opts) {
     attrs['>'] = addAttr.tail;
   }
   return attrs;
+};
+
+
+EX.eatDoctypeSubTags = function (remainder) {
+  var subTags = [];
+  while (true) {
+    remainder = remainder.replace(/^\s+/, '');
+    if (remainder[0] === ']') {
+      subTags.remainder = remainder.replace(/^\]\s*/, '');
+      return subTags;
+    }
+    if (!rxu(EX.tagRgx.at0, remainder)) {
+      console.log({ noTag: remainder, tagAt0: EX.tagRgx.at0 });
+      return false;
+    }
+    remainder = rxu('>');
+    subTags.push(rxu(0));
+  }
+  return false;
 };
 
 
