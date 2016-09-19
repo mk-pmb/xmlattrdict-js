@@ -40,6 +40,7 @@ PT.toString = function () {
     attr('class', ' '),
     attr('type', ' '),
     attr('role', ' '),
+    (this.srcPos === undefined ? '' : (' @ ' + String(this.srcPos))),
     ']');
 };
 
