@@ -34,12 +34,13 @@ CF.peekTag = function (spBuf, args) {
 
 PT.toString = function () {
   var attr = xad.fmtAttrXml_dk.bind(null, this.attrs);
-  return '[xmlattrdict.XmlTag <'.concat(this.tagName, '>',
+  return '[xmlattrdict.XmlTag <'.concat(this.tagName,
     attr('id', ' '),
     attr('name', ' '),
     attr('class', ' '),
     attr('type', ' '),
     attr('role', ' '),
+    '>',
     (this.srcPos === undefined ? '' : (' @ ' + String(this.srcPos))),
     ']');
 };
