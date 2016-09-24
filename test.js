@@ -26,6 +26,9 @@ expect({ '': '?xml', version: '1.0' });     // final "?" is ignored
 result = xmlAttrDict("<!-- I'm a comm&amp; -->");
 expect({ '': '!--', I: true, ' ': "'m a comm& --" });
 
+result = xmlAttrDict('<hr>');     // v0.1.12 failed to detect tagname
+expect({ '': 'hr' });             //    if no attributes were given
+
 result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
 expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '/': true });
 

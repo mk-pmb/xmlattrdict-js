@@ -42,7 +42,7 @@ function lsep(v, s) { return (v ? s + v : v); }
 function ltrim(s) { return String(s).replace(/^\s+/, ''); }
 
 
-EX.tagStartRgx = /<([!-;=\?-\uFFFF]+)(?:\s+|\/)/;
+EX.tagStartRgx = /<([!-;=\?-\uFFFF]+)(?:\s+|\/|$)/;
 EX.tagStartRgx.at0 = rxu.join(['^', EX.tagStartRgx]);
 EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
 EX.eqSignValue = rxu.join(['(=(?:',
