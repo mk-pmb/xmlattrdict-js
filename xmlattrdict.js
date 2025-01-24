@@ -38,7 +38,7 @@ EX.popAttr = function popAttr(dict, key, dflt) {
 };
 
 
-function lsep(v, s) { return (v ? s + v : v); }
+function lsep(v, s) { return (v && (s + v)); }
 function ltrim(s) { return String(s).replace(/^\s+/, ''); }
 
 
