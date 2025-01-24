@@ -9,7 +9,7 @@ CF = function XmlTag(srcText) {
   if ((typeof srcText) !== 'string') {
     throw new Error('expected srcText to be a non-empty string');
   }
-  if (srcText[0] !== '<') { srcText = '<' + srcText + '>'; }
+  if (srcText.slice(0, 1) !== '<') { srcText = '<' + srcText + '>'; }
   var opts = { attribRawValues: {} }, attrs = xad.tag2dict(srcText, opts);
   this.tagName = xad.popAttr(attrs, '', '');
   this.attrs = attrs;
