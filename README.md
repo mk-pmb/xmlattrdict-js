@@ -15,7 +15,7 @@ Usage
 from [test.js](test.js):
 <!--#include file="test.js" start="/*** BEGIN readme ***/"
   stop="/*** ENDOF readme ***/" code="javascript" -->
-<!--#verbatim lncnt="131" -->
+<!--#verbatim lncnt="155" -->
 ```javascript
 var xmlAttrDict = require('xmlattrdict'), input, result,
   assert = require('assert');
@@ -28,6 +28,9 @@ expect({ '': '?xml', version: '1.0' });     // final "?" is ignored
 
 result = xmlAttrDict("<!-- I'm a comm&amp; -->");
 expect({ '': '!--', I: true, ' ': "'m a comm& --" });
+
+result = xmlAttrDict('<hr>');     // v0.1.12 failed to detect tagname
+expect({ '': 'hr' });             //    if no attributes were given
 
 result = xmlAttrDict('<ubuntu ver="14.04"   lts name="tr&#x75;st&#121;"    />');
 expect({ '': 'ubuntu', ver: '14.04', lts: true, name: 'trusty', '/': true });
@@ -80,6 +83,16 @@ expect({ '': '/closing', withSlash: true, '/': true });
 
 result = xmlAttrDict('</closing withSpaceSlash />');
 expect({ '': '/closing', withSpaceSlash: true, '/': true });
+
+//===== Tags with angle brackets inside them =====
+
+input = ['<!DOCTYPE screw-basic-parsers [',
+  '  <!ELEMENT p (#PCDATA)>',
+  '  ]>'].join('\n');
+result = xmlAttrDict(input);
+expect({ '': '!DOCTYPE',
+  'screw-basic-parsers': true,
+  '[]': [ '<!ELEMENT p (#PCDATA)>' ] });
 
 //##########\\ dict -> tag //#############################################\\
 
@@ -146,6 +159,17 @@ expect('<\r \t="tab" \n="nl" =="eq" ?="qm" sp>');
 
 result = xmlAttrDict(input, { badKeys: 'comment' });
 expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
+
+//===== convenience attributes =====
+
+// innerText (¶) and innerXML (|):
+result = xmlAttrDict({ '': 'em', 'class': 'marked',
+  '¶': 'Typo: The "<" should have been a ">".',
+  '|': '<a id="typo1" name="typo1"></a>' });
+expect('<em class="marked">'
+  + 'Typo: The &quot;&lt;&quot; should have been a &quot;&gt;&quot;.'
+  + '<a id="typo1" name="typo1"></a>'
+  + '</em>');
 ```
 <!--#toc stop="scan" -->
 

@@ -169,6 +169,7 @@ EX.dict2tag = function (dict, opts) {
   }
   var dpop = EX.popAttr(dict), tagName = dpop('', ''), badKeys = [],
     attrs = lsep(tagName, '<'),
+    innerText = dpop('¶', ''), innerXML = dpop('|', ''),
     tail = lsep(dpop(' ', ''), ' ') + dpop('>', '');
   if (dpop('/')) { tail += ' /'; }
 
@@ -207,6 +208,9 @@ EX.dict2tag = function (dict, opts) {
   if (badKeys.length && badKeys.strategy) {
     badKeys = badKeys.strategy(badKeys, attrs);
     if ((typeof badKeys) === 'string') { return badKeys; }
+  }
+  if (tagName && (innerText || innerXML)) {
+    attrs += EX.xmlesc(innerText) + innerXML + '</' + tagName + '>';
   }
   return attrs;
 };
