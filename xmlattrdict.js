@@ -42,8 +42,8 @@ function lsep(v, s) { return (v && (s + v)); }
 function ltrim(s) { return String(s).replace(/^\s+/, ''); }
 
 
-EX.tagStartRgx = /<([!-;=\?-\uFFFF]+)(?:\s+|\/|$)/;
-EX.tagStartRgx.at0 = rxu.join(['^', EX.tagStartRgx]);
+EX.openingTagStartRgx = /<([!-;=\?-\uFFFF]+)(?:\s+|\/|$)/;
+EX.openingTagStartRgx.at0 = rxu.join(['^', EX.openingTagStartRgx]);
 EX.attrNameRgx = /([A-Za-z][A-Za-z0-9_:\+\-]*)/;
 EX.eqSignValue = rxu.join(['(=(?:',
   /"([\x00-!#-\uFFFF]*)"|/,
@@ -53,7 +53,7 @@ EX.eqSignValue = rxu.join(['(=(?:',
 EX.nextAttrRgx = rxu.join([/^[\x00- ]*/, EX.attrNameRgx, EX.eqSignValue]);
 
 EX.tagRgx = (function () {
-  var tag = rxu.body(rxu.join([/\s*/, EX.tagStartRgx, '(?:',
+  var tag = rxu.body(rxu.join([/\s*/, EX.openingTagStartRgx, '(?:',
     /[\x00-!#-&\(-=\?-Z\\-\uFFFF]+/, '|',
     EX.eqSignValue, '|',
     /\[(?:<$subtag>)*\s*\]/,
@@ -98,7 +98,7 @@ EX.tag2dict = function (tag, opts) {
     }
   });
 
-  rxu.ifMatch(tag, EX.tagStartRgx.at0, function tagName(tn) {
+  rxu.ifMatch(tag, EX.openingTagStartRgx.at0, function tagName(tn) {
     tag = tag.substr(tn[0].length);
     attrs[''] = tn[1];
   });
