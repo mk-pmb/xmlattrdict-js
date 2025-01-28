@@ -19,6 +19,20 @@ EX.xmldec = require('xmldecode');
 EX.xmlesc = require('xmlunidefuse');
 
 
+function wrapInObj(k, v, a) {
+  var o = {};
+  if (a) { Object.assign(o, a); }
+  o[k] = v;
+  return o;
+}
+
+
+function refine(f, x) {
+  var y = f(x);
+  return (y === undefined ? x : y);
+}
+
+
 EX.popAttr = function popAttr(dict, key, dflt) {
   if (arguments.length === 1) { return popAttr.bind(null, dict); }
   var val;
@@ -52,6 +66,10 @@ EX.eqSignValue = rxu.join(['(=(?:',
   ')|)']);
 EX.nextAttrRgx = rxu.join([/^[\x00- ]*/, EX.attrNameRgx, EX.eqSignValue]);
 
+EX.allTagsRgx = /<(?:\/?[\w:]+)(?:\s[\s -;=\?-\uFFFF]*|)(?:>|$)/g;
+EX.allTagsRgx.upNext = rxu.join(['(?=', EX.allTagsRgx, ')']);
+EX.allTagsRgx.capture = rxu.join(['(', EX.allTagsRgx, ')'], 'g');
+
 EX.tagRgx = (function () {
   var tag = rxu.body(rxu.join([/\s*/, EX.openingTagStartRgx, '(?:',
     /[\x00-!#-&\(-=\?-Z\\-\uFFFF]+/, '|',
@@ -67,10 +85,11 @@ EX.tagRgx = (function () {
 
 EX.tag2dict = function (tag, opts) {
   var attrs, addAttr, attrOrder;
-  tag = String(tag);
   opts = (opts || false);
   attrs = opts.destObj;
   attrs = (attrs || (attrs === null ? Object.create(null) : {}));
+  if (opts.verbatim) { attrs[opts.verbatim] = tag; }
+  tag = String(tag);
 
   addAttr = function (rawName, rawValue) {
     var textValue = rawValue;
@@ -175,8 +194,10 @@ EX.dict2tag = function (dict, opts) {
     tail = lsep(dpop(' ', ''), ' ') + dpop('>', ''),
     after = dpop('…', '');
   if (dpop('/')) { tail += ' /'; }
-
   opts = (opts || false);
+  if (opts.verbatim) { dpop(opts.verbatim); }
+  if (opts.ignoreKeys) { opts.ignoreKeys.forEach(dpop); }
+
   badKeys.strategy = (function (bkOpt) {
     switch (bkOpt) {
     case 'accept':
@@ -263,6 +284,64 @@ EX.makeValueMerger = function (strategy) {
     return function (o, n) { return [].concat(o, n); };
   }
   throw new Error('Unsupported merge strategy: ' + String(strategy));
+};
+
+
+EX.splitXml = function splitXml(doc, opts) {
+  if (!opts) { return splitXml(doc, true); }
+  var pos, after,
+    wrapTextsKey = opts.wrapTexts, doWrapTexts,
+    textAttrs = opts.textAttrs,
+    textTag = opts.textTagName,
+    onText = opts.onText, onTag = opts.onTag,
+    parts = opts.onto;
+  if (textTag) { textAttrs = Object.assign({ '': textTag }, textAttrs); }
+  if (wrapTextsKey === undefined) { wrapTextsKey = '…'; }
+  if (textAttrs && (wrapTextsKey === false)) { wrapTextsKey = '…'; }
+  doWrapTexts = (wrapTextsKey !== false);
+  if ((!parts) && (parts !== null)) { parts = []; }
+
+  function addTextPart(m) {
+    if (!m) { return; }
+    if (doWrapTexts) { m = wrapInObj(wrapTextsKey, m, textAttrs); }
+    if (onText) { m = refine(onText, m); }
+    if (parts) { parts.push(m); }
+  }
+
+  doc.split(EX.allTagsRgx.upNext).forEach(function f(m) {
+    if (!m) { return; }
+    if (m.slice(0, 1) !== '<') { return addTextPart(m); }
+    pos = m.indexOf('>');
+    if (pos < 0) {
+      after = '';
+    } else {
+      after = m.slice(pos + 1);
+      m = m.slice(0, pos + 1);
+    }
+    m = EX.tag2dict(m, opts);
+    if (onTag) { m = refine(onTag, m); }
+    if (parts) { parts.push(m); }
+    if (after) { addTextPart(after); }
+  });
+  return parts;
+};
+
+
+EX.compileXml = function compileXml(parts, opts) {
+  if (!opts) { return compileXml(parts, true); }
+  var xml = '', onDict = opts.onDict, onTag = opts.onTag, onText = opts.onText;
+  parts.forEach(function append(p) {
+    if (!p) { return; }
+    if (typeof p === 'object') {
+      if (onDict) { p = refine(onDict, p); }
+      p = EX.dict2tag(p);
+      if (onTag) { p = refine(onTag, p); }
+    } else {
+      if (onText) { p = refine(onText, p); }
+    }
+    xml += p;
+  });
+  return xml;
 };
 
 

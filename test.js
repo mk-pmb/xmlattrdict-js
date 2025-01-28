@@ -170,6 +170,66 @@ expect('<em class=marked>'
   + 'Typo: The &quot;&lt;&quot; should have been a &quot;&gt;&quot;.'
   + '<a id="typo1" name="typo1"></a>'
   + '</em><sup>[1]</sup>');
+
+//##########\\ document -> list //########################################\\
+
+input = '<li><a href="#"><img src=home.png> Back to<br />Homepage</a></li>';
+result = xmlAttrDict.splitXml(input);
+expect([
+  { '': 'li' },
+  { '': 'a', href: '#' },
+  { '': 'img', src: 'home.png' },
+  { '…': ' Back to' },
+  { '': 'br', '/': true },
+  { '…': 'Homepage' },
+  { '': '/a' },
+  { '': '/li' },
+]);
+
+input = 'Be <b>bold!</b>'; // Document fragment can start with text.
+result = xmlAttrDict.splitXml(input);
+expect([{ '…': 'Be ' }, { '': 'b' }, { '…': 'bold!' }, { '': '/b' }]);
+
+result = xmlAttrDict.splitXml(input, { wrapTexts: '=' });
+expect([{ '=': 'Be ' }, { '': 'b' }, { '=': 'bold!' }, { '': '/b' }]);
+
+result = xmlAttrDict.splitXml(input, { wrapTexts: '' }); // ambiguous!
+expect([{ '': 'Be ' }, { '': 'b' }, { '': 'bold!' }, { '': '/b' }]);
+
+result = xmlAttrDict.splitXml(input, { wrapTexts: false });
+expect(['Be ', { '': 'b' }, 'bold!', { '': '/b' }]);
+
+result = xmlAttrDict.splitXml(input, { textTagName: '=' });
+expect([{ '': '=', '…': 'Be ' },
+  { '': 'b' }, { '': '=', '…': 'bold!' }, { '': '/b' }]);
+
+result = xmlAttrDict.splitXml(input, { wrapTexts: 'v', textTagName: 4 });
+expect([{ '': 4, v: 'Be ' },
+  { '': 'b' }, { '': 4, v: 'bold!' }, { '': '/b' }]);
+
+
+
+//##########\\ list -> document //########################################\\
+
+input = [
+  { '': 'object', width: 50, height: 30 },
+  { '': 'param', name: 'movie', value: '/main.swf' },
+  { '': 'embed', src: '/main.swf', width: 50, height: 30 },
+  'Please install ',
+  { '…': 'and enable ' },
+  { '': '', '…': 'the flash player.' },
+  { '': '/embed' },
+  { '': '/object' },
+];
+result = xmlAttrDict.compileXml(input);
+expect('<object height=30 width=50>'
+  + '<param name=movie value=/main.swf>'
+  + '<embed height=30 src=/main.swf width=50>'
+  + 'Please install and enable the flash player.'
+  + '</embed></object>');
+
+
+
 /*** ENDOF readme ***/
 
 
