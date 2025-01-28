@@ -90,8 +90,9 @@ EX.tag2dict = function (tag, opts) {
   };
   addAttr.multi = EX.makeValueMerger(opts.multi);
 
-  rxu.ifMatch(tag, /(?:(\/)|\?|)>?\s*$/, function trailingSlash(sl) {
-    tag = tag.substr(0, sl.index);
+  rxu.ifMatch(tag, /(?:(\/)|\?|)\s*($|>(?![\S\s]*[<>]))/, function f(sl) {
+    addAttr.after = tag.slice(sl.index + sl[0].length);
+    tag = tag.slice(0, sl.index);
     if (sl[1]) {
       addAttr.tail = sl[1];
       // defer in order to get prettier console.dir
@@ -139,6 +140,7 @@ EX.tag2dict = function (tag, opts) {
   default:
     attrs['>'] = addAttr.tail;
   }
+  if (addAttr.after) { attrs['…'] = addAttr.after; }
   return attrs;
 };
 
@@ -170,7 +172,8 @@ EX.dict2tag = function (dict, opts) {
   var dpop = EX.popAttr(dict), tagName = dpop('', ''), badKeys = [],
     attrs = lsep(tagName, '<'),
     innerText = dpop('¶', ''), innerXML = dpop('|', ''),
-    tail = lsep(dpop(' ', ''), ' ') + dpop('>', '');
+    tail = lsep(dpop(' ', ''), ' ') + dpop('>', ''),
+    after = dpop('…', '');
   if (dpop('/')) { tail += ' /'; }
 
   opts = (opts || false);
@@ -212,6 +215,7 @@ EX.dict2tag = function (dict, opts) {
   if (tagName && (innerText || innerXML)) {
     attrs += EX.xmlesc(innerText) + innerXML + '</' + tagName + '>';
   }
+  attrs += after;
   return attrs;
 };
 

@@ -160,13 +160,13 @@ expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
 //===== convenience attributes =====
 
 // innerText (¶) and innerXML (|):
-result = xmlAttrDict({ '': 'em', 'class': 'marked',
+result = xmlAttrDict({ '': 'em', 'class': 'marked', '…': '<sup>[1]</sup>',
   '¶': 'Typo: The "<" should have been a ">".',
   '|': '<a id="typo1" name="typo1"></a>' });
 expect('<em class="marked">'
   + 'Typo: The &quot;&lt;&quot; should have been a &quot;&gt;&quot;.'
   + '<a id="typo1" name="typo1"></a>'
-  + '</em>');
+  + '</em><sup>[1]</sup>');
 /*** ENDOF readme ***/
 
 
