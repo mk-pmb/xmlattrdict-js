@@ -83,9 +83,9 @@ expect({ '': '/closing', withSpaceSlash: true, '/': true });
 
 //===== Tags with angle brackets inside them =====
 
-input = ['<!DOCTYPE screw-basic-parsers [',
-  '  <!ELEMENT p (#PCDATA)>',
-  '  ]>'].join('\n');
+input = ('<!DOCTYPE screw-basic-parsers ['
+  + '\n  <!ELEMENT p (#PCDATA)>'
+  + '\n  ]>');
 result = xmlAttrDict(input);
 expect({ '': '!DOCTYPE',
   'screw-basic-parsers': true,
