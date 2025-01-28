@@ -114,7 +114,7 @@ expect('<!-- thisIs a comment -->');
 
 result = xmlAttrDict({ '': 'meta', 'http-equiv': 'Content-Type',
   content: 'text/html' });
-expect('<meta content="text/html" http-equiv="Content-Type">');
+expect('<meta content=text/html http-equiv=Content-Type>');
 
 result = xmlAttrDict({ '': 'msg', text: '&Hel​lo s\n<o>wman! ☃' });
 expect('<msg text="&amp;Hel&#x200B;lo&#xA0;s&#10;&lt;o&gt;wman!&#x205F;☃">');
@@ -122,25 +122,28 @@ expect('<msg text="&amp;Hel&#x200B;lo&#xA0;s&#10;&lt;o&gt;wman!&#x205F;☃">');
 //===== additional verbatim text and tail =====
 
 result = xmlAttrDict({ '': 'hr', size: 1 });
+expect('<hr size=1>');
+
+result = xmlAttrDict({ '': 'hr', size: 1 }, { dq: true }); // doublequote always
 expect('<hr size="1">');
 
 result = xmlAttrDict({ '': 'hr', size: 1, '>': '/' });
-expect('<hr size="1"/>');
+expect('<hr size=1/>');
 
 result = xmlAttrDict({ '': 'hr', size: 1, ' ': '/' });
-expect('<hr size="1" />');  // <-- space --^
+expect('<hr size=1 />');  // <-- space --^
 
 result = xmlAttrDict({ '': 'hr', size: 1, '/': true });
-expect('<hr size="1" />');
+expect('<hr size=1 />');
 
 result = xmlAttrDict({ '': 'hr', size: 1, ' ': 'verba<?php foo(); ?>tim' });
-expect('<hr size="1" verba<?php foo(); ?>tim>');
+expect('<hr size=1 verba<?php foo(); ?>tim>');
 
 result = xmlAttrDict({ '': 'hr', size: 1, '>': '&tail;' });
-expect('<hr size="1"&tail;>');
+expect('<hr size=1&tail;>');
 
 result = xmlAttrDict({ '': 'hr', size: 1, '>': '&tail', ' ': 'ver<b>atim' });
-expect('<hr size="1" ver<b>atim&tail>');
+expect('<hr size=1 ver<b>atim&tail>');
 
 //===== invalid attribute names =====
 
@@ -152,7 +155,7 @@ result = throw2string(xmlAttrDict)(input, { badKeys: 'error' });
 expect('Error: bad keys: "&#9;", "&#10;", "=", "?"');
 
 result = xmlAttrDict(input, { badKeys: 'accept' });
-expect('<\r \t="tab" \n="nl" =="eq" ?="qm" sp>');
+expect('<\r \t=tab \n=nl ==eq ?=qm sp>');
 
 result = xmlAttrDict(input, { badKeys: 'comment' });
 expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
@@ -162,8 +165,8 @@ expect('<\r sp><!-- bad keys: "&#9;", "&#10;", "=", "?" -->');
 // innerText (¶) and innerXML (|):
 result = xmlAttrDict({ '': 'em', 'class': 'marked', '…': '<sup>[1]</sup>',
   '¶': 'Typo: The "<" should have been a ">".',
-  '|': '<a id="typo1" name="typo1"></a>' });
-expect('<em class="marked">'
+  '|': '<a id="typo1" name="typo1"></a>'});
+expect('<em class=marked>'
   + 'Typo: The &quot;&lt;&quot; should have been a &quot;&gt;&quot;.'
   + '<a id="typo1" name="typo1"></a>'
   + '</em><sup>[1]</sup>');

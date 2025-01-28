@@ -206,6 +206,7 @@ EX.dict2tag = function (dict, opts) {
     }
     attrs += (attrs && ' ') + EX.fmtAttrXml_dk(dict, key);
   });
+  attrs = EX.optimizeQuotes(opts, attrs);
   attrs += tail;
   if (tagName) { attrs += '>'; }
   if (badKeys.length && badKeys.strategy) {
@@ -217,6 +218,15 @@ EX.dict2tag = function (dict, opts) {
   }
   attrs += after;
   return attrs;
+};
+
+
+EX.optimizeQuotes = function (opts, at) {
+  if (opts.dq) { return at; }
+  at = at.replace(/\="([\w\+\-:,\/\.]+)"/g, '=$1'); /*
+    XML actually allows even more characters, but I'm a bit conservative here.
+    */
+  return at;
 };
 
 
