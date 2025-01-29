@@ -210,8 +210,8 @@ expect([{ '': 4, v: 'Be ' },
 
 input = [
   { '': 'object', width: 50, height: 30 },
-  { '': 'param', name: 'movie', value: '/main.swf' },
-  { '': 'embed', src: '/main.swf', width: 50, height: 30 },
+  { '': 'param', name: 'movie', value: 'main.swf' },
+  { '': 'embed', src: 'main.swf', width: 50, height: 30 },
   'Please install ',
   { '…': 'and enable ' },
   { '': '', '…': 'the flash player.' },
@@ -219,9 +219,9 @@ input = [
   { '': '/object' },
 ];
 result = xmlAttrDict.compileXml(input);
-expect('<object height=30 width=50>'
-  + '<param name=movie value=/main.swf>'
-  + '<embed height=30 src=/main.swf width=50>'
+expect('<object height="30" width="50">'
+  + '<param name="movie" value="main.swf">'
+  + '<embed height="30" src="main.swf" width="50">'
   + 'Please install and enable the flash player.'
   + '</embed></object>');
 
