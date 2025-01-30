@@ -102,6 +102,14 @@ expect('<!DOCTYPE html>');
 result = xmlAttrDict({ '': '!DOCTYPE', html: null });
 expect('<!DOCTYPE html>');
 
+input = { '': 'order', a: [10, 1], z: 26, y: 25, c: 3, x: 24, b: 2 };
+result = xmlAttrDict(input);
+expect('<order a="10" a="1" b="2" c="3" x="24" y="25" z="26">');
+result = xmlAttrDict(input, { attrOrder: false });
+expect('<order a="10" a="1" z="26" y="25" c="3" x="24" b="2">');
+result = xmlAttrDict(input, { attrOrder: ['c', 'a', 'z', 'A', 'c', 'a'] });
+expect('<order c="3" a="10" a="1" z="26" b="2" x="24" y="25">');
+
 result = xmlAttrDict({ '': '!--', thisIs: true, a: null, comment: true,
   '>': ' --' });
 expect('<!-- a comment thisIs -->');

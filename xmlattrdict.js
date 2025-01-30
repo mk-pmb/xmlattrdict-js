@@ -220,12 +220,37 @@ EX.dict2tag = function (dict, opts) {
     throw new Error('unsupported badKeys strategy: ' + String(bkOpt));
   }(opts.badKeys));
 
-  Object.keys(dict).sort().forEach(function (key) {
+
+  function appendAttrKv(key, val) {
+    if (val === undefined) { return; }
+    if (attrs) { attrs += ' '; }
+    attrs += key;
+    if (val === true) { return; }
+    if (val === null) { return; }
+    attrs += '="' + EX.xmlesc(val) + '"';
+  }
+
+  function checkAddAttr(key) {
+    var val = dpop(key);
+    if (val === undefined) { return; }
     if (badKeys.push && (rxu(EX.attrNameRgx, key)[0] !== key)) {
+      // ^-- Only invest the effort for RegExp match if we actually care.
       return badKeys.push(key);
     }
-    attrs += (attrs && ' ') + EX.fmtAttrXml_dk(dict, key);
-  });
+    if (isAry(val)) { return val.forEach(appendAttrKv.bind(null, key)); }
+    appendAttrKv(key, val);
+  }
+
+  (function decideOrder() {
+    var ao = opts.attrOrder, kl = Object.keys(dict);
+    if (ao === undefined) { ao = true; }
+    if (ao === false) { return kl.forEach(checkAddAttr); }
+    if (ao === true) { return kl.sort().forEach(checkAddAttr); }
+    if (isAry(ao)) { ao.forEach(checkAddAttr); } /*
+      don't return, we may still have other keys. */
+    kl.sort().forEach(checkAddAttr);
+  }());
+
   attrs += tail;
   if (tagName) { attrs += '>'; }
   if (badKeys.length && badKeys.strategy) {
@@ -237,15 +262,6 @@ EX.dict2tag = function (dict, opts) {
   }
   attrs += after;
   return attrs;
-};
-
-
-EX.fmtAttrXml_dk = function fmtAttrXml(dict, key, prefix, suffix) {
-  var val = dict[key];
-  if (val === undefined) { return ''; }
-  if (val === null) { return key; }
-  if (val === true) { return key; }
-  return ((prefix || '') + key + '="' + EX.xmlesc(val) + '"' + (suffix || ''));
 };
 
 
