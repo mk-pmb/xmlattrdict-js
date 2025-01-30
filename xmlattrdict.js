@@ -3,6 +3,7 @@
 'use strict';
 
 var EX, rxu = require('rxu'),
+  isAry = Array.isArray.bind(Array),
   hasOwn = Function.call.bind(Object.prototype.hasOwnProperty);
 
 EX = function xmlattrdict(input, opts) {
@@ -37,7 +38,7 @@ EX.popAttr = function popAttr(dict, key, dflt) {
   if (arguments.length === 1) { return popAttr.bind(null, dict); }
   var val;
   if ((key && typeof key) === 'object') {
-    if (Array.isArray(key)) {
+    if (isAry(key)) {
       val = {};
       key.map(function (k) { val[k] = popAttr(dict, k, dflt); });
       return val;
@@ -125,9 +126,7 @@ EX.tag2dict = function (tag, opts) {
 
   attrOrder = opts.attrOrder;
   if (attrOrder) {
-    if (!Array.isArray(attrOrder)) {
-      attrOrder = attrs[attrOrder] = [];
-    }
+    if (!isAry(attrOrder)) { attrOrder = attrs[attrOrder] = []; }
   }
 
   addAttr.found = function (m) {
@@ -212,7 +211,7 @@ EX.dict2tag = function (dict, opts) {
       };
     }
     if (bkOpt) {
-      if (Array.isArray(bkOpt)) {
+      if (isAry(bkOpt)) {
         badKeys.push = badKeys.strategy.push.bind(badKeys.strategy);
         badKeys.strategy = undefined;
         return;
